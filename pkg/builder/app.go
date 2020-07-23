@@ -57,9 +57,24 @@ func (app *AppBuilder) Folder() *AppBuilder {
 		"pkg/repository",
 	}
 
+
+	builder := NewFolderBuilder(app.workingDir)
+	builder.
+		ProjectName(app.projectName).
+		Folders(folders)
+
+	app.actions = append(app.actions, builder)
+
+	return app
+}
+
+func (app *AppBuilder) BuildGoMod() *AppBuilder  {
+
 	packages := []string{
+		"github.com/jinzhu/gorm",
 		"github.com/karta0898098/kara",
 		"github.com/gin-gonic/gin",
+		"github.com/labstack/echo/v4",
 		"github.com/spf13/cobra",
 		"github.com/spf13/viper",
 		"github.com/rs/zerolog/log",
@@ -69,7 +84,6 @@ func (app *AppBuilder) Folder() *AppBuilder {
 	builder := NewFolderBuilder(app.workingDir)
 	builder.
 		ProjectName(app.projectName).
-		Folders(folders).
 		Packages(packages)
 
 	app.actions = append(app.actions, builder)

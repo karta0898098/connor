@@ -9,6 +9,7 @@ import (
 func Init(context *cli.Context) error {
 
 	name := context.String("name")
+	httpEngine := context.String("http")
 
 	app := builder.NewApp()
 	app.ProjectName(name).
@@ -18,11 +19,13 @@ func Init(context *cli.Context) error {
 		BuildConfigToml().
 		BuildControllerModule().
 		BuildHandlerModule().
-		BuildHandlerRouter().
+		BuildHandlerRouter(httpEngine).
 		BuildServiceModule().
 		BuildRepositoryModule().
-		BuildServer().
+		BuildServer(httpEngine).
 		BuildMain().
+		BuildGoMod().
 		Build()
+
 	return nil
 }

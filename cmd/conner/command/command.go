@@ -16,7 +16,7 @@ func New() []*cli.Command {
 		},
 		{
 			Name:        "add",
-			Usage:       "add you need file to project",
+			Usage:       "add you controller or repository and service file to project",
 			Subcommands: NewAddCommand(),
 		},
 	}

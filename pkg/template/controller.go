@@ -19,8 +19,8 @@ import (
 var Module = fx.Provide()
 `
 
-// Controller template
-const Controller = `package controller
+// GinController template ...
+const GinController = `package controller
 
 import (
 	"github.com/gin-gonic/gin"
@@ -60,6 +60,49 @@ func (controller *{{.Name}}Controller) Delete(c *gin.Context){
 	panic("please implement")
 }
 `
+
+// EchoController template ...
+const EchoController =  `package controller
+
+import (
+	"github.com/labstack/echo/v4"
+)
+
+// {{.Name}}Controller ...
+type {{.Name}}Controller struct{
+}
+
+// New{{.Name}}Controller new constructor
+func New{{.Name}}Controller() *{{.Name}}Controller{
+	return &{{.Name}}Controller{}
+}
+
+// Get ...
+func (controller *{{.Name}}Controller) Get(c echo.Context) error{
+	panic("please implement")
+}
+
+// List ...
+func (controller *{{.Name}}Controller) List(c echo.Context) error{
+	panic("please implement")
+}
+
+// Create ...
+func (controller *{{.Name}}Controller) Create(c echo.Context) error{
+	panic("please implement")
+}
+
+// Update ...
+func (controller *{{.Name}}Controller) Update(c echo.Context) error{
+	panic("please implement")
+}
+
+// Delete ...
+func (controller *{{.Name}}Controller) Delete(c echo.Context) error{
+	panic("please implement")
+}
+`
+
 
 // AddControllerInModule add controller module
 func AddControllerInModule(controller string) string {

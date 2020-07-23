@@ -27,13 +27,13 @@ var Module = fx.Options(
 type Handler struct {
 }
 
-// HandlerParams for handler new constructor
-type HandlerParams struct {
+// Params for handler new constructor
+type Params struct {
 	fx.In
 }
 
 // NewHandler handler new constructor
-func NewHandler(h HandlerParams) *Handler {
+func NewHandler(h Params) *Handler {
 	return &Handler{}
 }`
 
@@ -80,7 +80,7 @@ func AddHandlerModule(controller string) string {
 						}
 					}
 
-					if typeSpec.Name.Name == "HandlerParams" {
+					if typeSpec.Name.Name == "Params" {
 						structType, ok := typeSpec.Type.(*dst.StructType)
 						if ok {
 							structType.Fields.List = append(structType.Fields.List,

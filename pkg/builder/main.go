@@ -20,7 +20,14 @@ func (app *AppBuilder) BuildMain() *AppBuilder {
 }
 
 // BuildServer build server.go
-func (app *AppBuilder) BuildServer() *AppBuilder {
+func (app *AppBuilder) BuildServer(http string) *AppBuilder {
+
+	engine := ""
+	if http == "gin" {
+		engine = "RunGin"
+	} else {
+		engine = "RunEcho"
+	}
 
 	builder := &CodeBuilder{
 		Template:    template.Server,
@@ -29,6 +36,7 @@ func (app *AppBuilder) BuildServer() *AppBuilder {
 		File:        "server.go",
 		Data: H{
 			"ProjectName": app.projectName,
+			"Engine":      engine,
 		},
 	}
 

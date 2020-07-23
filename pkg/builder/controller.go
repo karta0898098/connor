@@ -24,10 +24,18 @@ func (app *AppBuilder) BuildControllerModule() *AppBuilder {
 }
 
 // BuildController build controller crud method
-func (app *AppBuilder) BuildController(name string) *AppBuilder {
+func (app *AppBuilder) BuildController(name, httpEngine string) *AppBuilder {
+
+	tmpl := ``
+
+	if httpEngine == "gin" {
+		tmpl = template.GinController
+	}else {
+		tmpl = template.EchoController
+	}
 
 	builder := &CodeBuilder{
-		Template: template.Controller,
+		Template: tmpl,
 		Path:     "pkg/handler/controller",
 		File:     strings.ToLower(name) + ".go",
 		Data: H{
@@ -56,4 +64,3 @@ func (app *AppBuilder) AddControllerModule(name string) *AppBuilder {
 	app.actions = append(app.actions, builder)
 	return app
 }
-

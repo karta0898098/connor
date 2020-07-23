@@ -1,23 +1,21 @@
 package command
 
 import (
-	"bytes"
-	"encoding/json"
 	"github.com/karta0898098/connor/cmd/conner/flag"
 	"github.com/karta0898098/connor/pkg/builder"
 	"github.com/karta0898098/connor/pkg/util"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
 // NewAddCommand new command for add controller and entity
 func NewAddCommand() []*cli.Command {
 	return []*cli.Command{
 		{
-			Name:   "controller",
-			Usage:  "add controller",
-			Flags:  flag.NewAddController(),
-			Action: AddController,
+			Name:      "controller",
+			Usage:     "add controller",
+			UsageText: "add controller and create construct",
+			Flags:     flag.NewAddController(),
+			Action:    AddController,
 		},
 		{
 			Name:   "entity",
@@ -28,12 +26,12 @@ func NewAddCommand() []*cli.Command {
 	}
 }
 
-
 // AddController add controller action
 func AddController(context *cli.Context) error {
 
 	controller := context.String("name")
-	projectName := GetProjectName()
+	projectName := util.FindProjectName()
+	httpEngine := util.FindHttpEngine()
 
 	app := builder.NewApp()
 	app.ProjectName(projectName).
@@ -42,7 +40,7 @@ func AddController(context *cli.Context) error {
 	if controller != "" {
 		name := util.FixControllerName(controller)
 		app = app.
-			BuildController(name).
+			BuildController(name, httpEngine).
 			AddControllerModule(name).
 			AddHandlerModule(name)
 	}
@@ -52,7 +50,6 @@ func AddController(context *cli.Context) error {
 	return nil
 }
 
-
 // AddEntity add entity
 func AddEntity(context *cli.Context) error {
 
@@ -60,7 +57,8 @@ func AddEntity(context *cli.Context) error {
 	srv := context.Bool("srv")
 	repo := context.Bool("repo")
 
-	projectName := GetProjectName()
+	projectName := util.FindProjectName()
+
 	app := builder.NewApp()
 	app.ProjectName(projectName).
 		WorkingDir()
@@ -82,20 +80,4 @@ func AddEntity(context *cli.Context) error {
 
 	app.Build()
 	return nil
-}
-
-// GetProjectName ...
-func GetProjectName() string {
-	var outBuf bytes.Buffer
-	process := exec.Command("go", "mod", "edit", "-json")
-	process.Stdout = &outBuf
-	process.Run()
-
-	var data map[string]interface{}
-
-	_ = json.Unmarshal(outBuf.Bytes(), &data)
-
-	module, _ := data["Module"].(map[string]interface{})
-
-	return module["Path"].(string)
 }

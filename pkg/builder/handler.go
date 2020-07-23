@@ -24,10 +24,17 @@ func (app *AppBuilder) BuildHandlerModule() *AppBuilder {
 }
 
 // BuildHandlerRouter build handler router.go
-func (app *AppBuilder) BuildHandlerRouter() *AppBuilder {
+func (app *AppBuilder) BuildHandlerRouter(http string) *AppBuilder {
+
+	tmpl := ""
+	if http == "gin" {
+		tmpl = template.GinRouter
+	} else {
+		tmpl = template.EchoRouter
+	}
 
 	builder := &CodeBuilder{
-		Template:    template.Router,
+		Template:    tmpl,
 		ProjectName: app.projectName,
 		Path:        "pkg/handler",
 		File:        "router.go",

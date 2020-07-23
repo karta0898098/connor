@@ -10,6 +10,14 @@ func NewInit() []cli.Flag {
 			Aliases:  []string{"n"},
 			Required: true,
 			Usage:    "project name",
+			Hidden:   false,
+		},
+		&cli.StringFlag{
+			Name:     "http",
+			Required: false,
+			Usage:    "chose http engine [gin,echo]",
+			Value:    "echo",
+			Hidden:   false,
 		},
 	}
 }

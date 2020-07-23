@@ -76,22 +76,29 @@ func (f *FolderBuilder) Build() {
 		}
 	}
 
-	//執行go mod
-	cmd := exec.Command("go", "mod", "init", f.projectName)
-	cmd.Dir = f.workingDir
-	err = cmd.Run()
+	if len(f.packages) > 0 {
+		//執行go mod
+		cmd := exec.Command("go", "mod", "init", f.projectName)
+		cmd.Dir = f.workingDir
+		err = cmd.Run()
 
-	if err != nil {
-		fmt.Println("can't exec go mod reason: ", err)
-	}
+		if err != nil {
+			fmt.Println("can't exec go mod reason: ", err)
+		}
 
-	bar := pb.StartNew(len(f.packages))
-	for i := 0; i < len(f.packages); i++ {
-		process := exec.Command("go", "get", f.packages[i])
+		bar := pb.StartNew(len(f.packages))
+		for i := 0; i < len(f.packages); i++ {
+			process := exec.Command("go", "get", f.packages[i])
+			process.Dir = f.workingDir
+			process.Run()
+			bar.Increment()
+		}
+		bar.Finish()
+
+		process := exec.Command("go", "mod", "tidy")
 		process.Dir = f.workingDir
 		process.Run()
-		bar.Increment()
+
+		fmt.Println("get go mod package finish")
 	}
-	bar.Finish()
-	fmt.Println("get go mod package finish")
 }

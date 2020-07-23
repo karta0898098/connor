@@ -7,10 +7,13 @@ import (
 	"os"
 )
 
-func main()  {
+func main() {
 	app := cli.NewApp()
 	app.Name = "connor"
+	app.Usage = "for create web app"
+	app.Version = "1.0.1"
 	app.Commands = command.New()
+
 	err := app.Run(os.Args)
 	if err != nil {
 		fmt.Println("Sorry can't create project reason:", err)
