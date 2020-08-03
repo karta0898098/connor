@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-// SetRouter set http router & handler
-func SetRouter(router *gin.Engine, handler *Handler) {
+// SetRoute set http router & handler
+func SetRoute(router *gin.Engine, handler *Handler) {
 }
 
 // SetGRPCService register gRPC handler
@@ -24,8 +24,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-// SetRouter set http router & handler
-func SetRouter(router *echo.Echo, handler *Handler) {
+// SetRoute set http router & handler
+func SetRoute(router *echo.Echo, handler *Handler) {
 }
 
 // SetGRPCService register gRPC handler

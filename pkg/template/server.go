@@ -36,7 +36,7 @@ func run(cmd *cobra.Command, args []string) {
 		service.Module,
 		handler.Module,
 		fx.Invoke(zlog.Setup),
-		fx.Invoke(handler.SetRouter),
+		fx.Invoke(handler.SetRoute),
 		fx.Invoke(handler.SetGRPCService),
 		fx.Invoke(http.{{.Engine}}),
 		fx.Invoke(grpc.RunGRPC),

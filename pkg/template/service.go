@@ -30,7 +30,7 @@ type I{{.Name}}Service interface {
 	Get(ctx context.Context, condition model.Where{{.Name}}) (model.{{.Name}}, error)
 	List(ctx context.Context, condition model.Where{{.Name}}) ([]model.{{.Name}}, error)
 	Create(ctx context.Context, {{ToLowerCamel .Name}} model.{{.Name}}) (model.{{.Name}}, error)
-	Update(ctx context.Context, condition model.Update{{.Name}}) error
+	Update(ctx context.Context, condition model.Where{{.Name}} , data interface{}) error
 	Delete(ctx context.Context, condition model.Where{{.Name}}) error
 }
 
@@ -62,8 +62,8 @@ func (srv *{{.Name}}Service) Create(ctx context.Context, {{ToLowerCamel .Name}} 
 }
 
 // Update ...
-func (srv *{{.Name}}Service) Update(ctx context.Context, update model.Update{{.Name}}) error {
-	return srv.repo.Update(ctx, update.{{.Name}}, update.Where, nil)
+func (srv *{{.Name}}Service) Update(ctx context.Context, where model.Where{{.Name}},data interface{}) error {
+	return srv.repo.Update(ctx, where, data, nil)
 }
 
 // Delete ...

@@ -9,7 +9,6 @@ import (
 	"strconv"
 )
 
-
 const modelWhereUpdate = `
 // TableName {{.Name}} in database table name
 func ({{ToLowerCamel .Name}} *{{.Name}}) TableName() string {
@@ -19,17 +18,13 @@ func ({{ToLowerCamel .Name}} *{{.Name}}) TableName() string {
 // Where{{.Name}} for repository where condition
 type Where{{.Name}} struct {
 	{{.Name}} {{.Name}}
-}
-
-// Update{{.Name}} for repository update condition
-type Update{{.Name}} struct {
-	Where Where{{.Name}}
-	{{.Name}}  {{.Name}}
+	Base condition.Where
 }
 
 // Where for repository where condition
 func (where *Where{{.Name}}) Where(db *gorm.DB) *gorm.DB {
 	db = db.Where(where.{{.Name}})
+	db = db.Where(where.Base.Where)
 	return db
 }
 `
@@ -44,7 +39,8 @@ func AddModelWhereAndUpdate(code []byte) string {
 	}
 
 	importedPkg := 0
-	hasImported := false
+	hasGormImported := false
+	hasConditionImported := false
 	for i := 0; i < len(f.Decls); i++ {
 		genDecl, ok := f.Decls[i].(*dst.GenDecl)
 		if ok {
@@ -53,16 +49,20 @@ func AddModelWhereAndUpdate(code []byte) string {
 				if ok {
 					importedPkg++
 					if imptSpec.Path.Value == strconv.Quote("github.com/jinzhu/gorm") {
-						hasImported = true
+						hasGormImported = true
+					}
+
+					if imptSpec.Path.Value == strconv.Quote("github.com/karta0898098/kara/db/condition") {
+						hasConditionImported = true
 					}
 				}
 			}
 		}
 	}
 
-	if !hasImported {
-		if importedPkg == 0 {
-			//No any import
+	if importedPkg == 0 {
+		//No any import
+		if !hasGormImported {
 			f.Decls = append(f.Decls, &dst.GenDecl{
 				Tok:    token.IMPORT,
 				Lparen: false,
@@ -78,16 +78,43 @@ func AddModelWhereAndUpdate(code []byte) string {
 				Rparen: false,
 				Decs:   dst.GenDeclDecorations{},
 			})
-			f.Decls[0], f.Decls[1] = f.Decls[1], f.Decls[0]
-		} else {
-			for i := 0; i < len(f.Decls); i++ {
-				genDecl, ok := f.Decls[i].(*dst.GenDecl)
-				if ok {
-					if genDecl.Tok == token.IMPORT {
+		}
+		f.Decls[0], f.Decls[1] = f.Decls[1], f.Decls[0]
+
+		for i := 0; i < len(f.Decls); i++ {
+			genDecl, ok := f.Decls[i].(*dst.GenDecl)
+			if ok {
+				if genDecl.Tok == token.IMPORT {
+					if !hasConditionImported {
+						genDecl.Specs = append(genDecl.Specs, &dst.ImportSpec{
+							Path: &dst.BasicLit{
+								Kind:  token.STRING,
+								Value: strconv.Quote("github.com/karta0898098/kara/db/condition"),
+							},
+						})
+					}
+				}
+			}
+		}
+	} else {
+		for i := 0; i < len(f.Decls); i++ {
+			genDecl, ok := f.Decls[i].(*dst.GenDecl)
+			if ok {
+				if genDecl.Tok == token.IMPORT {
+					if !hasGormImported {
 						genDecl.Specs = append(genDecl.Specs, &dst.ImportSpec{
 							Path: &dst.BasicLit{
 								Kind:  token.STRING,
 								Value: strconv.Quote("github.com/jinzhu/gorm"),
+							},
+						})
+					}
+
+					if !hasConditionImported {
+						genDecl.Specs = append(genDecl.Specs, &dst.ImportSpec{
+							Path: &dst.BasicLit{
+								Kind:  token.STRING,
+								Value: strconv.Quote("github.com/karta0898098/kara/db/condition"),
 							},
 						})
 					}
