@@ -15,16 +15,18 @@ func ({{ToLowerCamel .Name}} *{{.Name}}) TableName() string {
 	return "{{ToLowerCamel .Plural}}"
 }
 
-// Where{{.Name}} for repository where condition
-type Where{{.Name}} struct {
+// Query{{.Name}} for repository where condition
+type Query{{.Name}} struct {
 	{{.Name}} {{.Name}}
 	Base condition.Where
+	Sorting condition.Sorting
 }
 
 // Where for repository where condition
-func (where *Where{{.Name}}) Where(db *gorm.DB) *gorm.DB {
-	db = db.Where(where.{{.Name}})
-	db = db.Where(where.Base.Where)
+func (option *Query{{.Name}}) Where(db *gorm.DB) *gorm.DB {
+	db = db.Where(option.{{.Name}})
+	db = db.Scopes(option.Base.Where)
+	db = db.Scopes(option.Sorting.Sort)
 	return db
 }
 `

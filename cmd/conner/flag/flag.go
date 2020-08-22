@@ -19,6 +19,11 @@ func NewInit() []cli.Flag {
 			Value:    "echo",
 			Hidden:   false,
 		},
+		&cli.BoolFlag{
+			Name: "yaml",
+			Usage: "chose config use yaml or toml",
+			Hidden: false,
+		},
 	}
 }
 

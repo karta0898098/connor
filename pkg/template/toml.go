@@ -20,7 +20,7 @@ local = true
 
     [database.write]
     debug = false
-    host = ""
+    host = "127.0.0.1"
     user = ""
     password  = ""
     port = 3306

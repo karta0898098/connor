@@ -25,50 +25,50 @@ import (
 	"{{.ProjectName}}/pkg/repository"
 )
 
-// I{{.Name}}Service {{.Name}} service implement...
-type I{{.Name}}Service interface {
-	Get(ctx context.Context, condition model.Where{{.Name}}) (model.{{.Name}}, error)
-	List(ctx context.Context, condition model.Where{{.Name}}) ([]model.{{.Name}}, error)
-	Create(ctx context.Context, {{ToLowerCamel .Name}} model.{{.Name}}) (model.{{.Name}}, error)
-	Update(ctx context.Context, condition model.Where{{.Name}} , data interface{}) error
-	Delete(ctx context.Context, condition model.Where{{.Name}}) error
+// {{.Name}}Service {{.Name}} service implement...
+type {{.Name}}Service interface {
+	Get(ctx context.Context, condition model.Query{{.Name}}) (model.{{.Name}}, error)
+	List(ctx context.Context, condition model.Query{{.Name}}) ([]model.{{.Name}}, error)
+	Create(ctx context.Context, {{ToLowerCamel .Name}} Query.{{.Name}}) (model.{{.Name}}, error)
+	Update(ctx context.Context, condition model.Query{{.Name}} , data interface{}) error
+	Delete(ctx context.Context, condition model.Query{{.Name}}) error
 }
 
-// {{.Name}}Service {{.Name}} service  ...
-type {{.Name}}Service struct {
-	repo repository.I{{.Name}}Repository
+// {{ToLowerCamel .Name}}Service {{ToLowerCamel .Name}} service  ...
+type {{ToLowerCamel .Name}}Service struct {
+	repo repository.{{.Name}}Repository
 }
 
 // New{{.Name}}Service new service constructor
-func New{{.Name}}Service(repo repository.I{{.Name}}Repository) I{{.Name}}Service {
-	return &{{.Name}}Service{
+func New{{.Name}}Service(repo repository.{{.Name}}Repository) {{.Name}}Service {
+	return &{{ToLowerCamel .Name}}Service{
 		repo: repo,
 	}
 }
 
 // Get ...
-func (srv *{{.Name}}Service) Get(ctx context.Context, where model.Where{{.Name}}) (model.{{.Name}}, error) {
-	return srv.repo.Get(ctx, where, nil)
+func (srv *{{ToLowerCamel .Name}}Service) Get(ctx context.Context, where model.Query{{.Name}}) (model.{{.Name}}, error) {
+	return srv.repo.Get(ctx, where, false)
 }
 
 // List ...
-func (srv *{{.Name}}Service) List(ctx context.Context, where model.Where{{.Name}}) ([]model.{{.Name}}, error) {
-	return srv.repo.List(ctx, where, nil)
+func (srv *{{ToLowerCamel .Name}}Service) List(ctx context.Context, where model.Query{{.Name}}) ([]model.{{.Name}}, error) {
+	return srv.repo.List(ctx, where, false)
 }
 
 // Create ...
-func (srv *{{.Name}}Service) Create(ctx context.Context, {{ToLowerCamel .Name}} model.{{.Name}}) (model.{{.Name}}, error) {
-	return srv.repo.Create(ctx, {{ToLowerCamel .Name}}, nil)
+func (srv *{{ToLowerCamel .Name}}Service) Create(ctx context.Context, {{ToLowerCamel .Name}} model.{{.Name}}) (model.{{.Name}}, error) {
+	return srv.repo.Create(ctx, {{ToLowerCamel .Name}})
 }
 
 // Update ...
-func (srv *{{.Name}}Service) Update(ctx context.Context, where model.Where{{.Name}},data interface{}) error {
-	return srv.repo.Update(ctx, where, data, nil)
+func (srv *{{ToLowerCamel .Name}}Service) Update(ctx context.Context, where model.Query{{.Name}},data interface{}) error {
+	return srv.repo.Update(ctx, where, data)
 }
 
 // Delete ...
-func (srv {{.Name}}Service) Delete(ctx context.Context, where model.Where{{.Name}}) error {
-	return srv.repo.Delete(ctx, where, nil)
+func (srv {{ToLowerCamel .Name}}Service) Delete(ctx context.Context, where model.Query{{.Name}}) error {
+	return srv.repo.Delete(ctx, where)
 }
 `
 

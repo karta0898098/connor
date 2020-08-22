@@ -10,13 +10,14 @@ func Init(context *cli.Context) error {
 
 	name := context.String("name")
 	httpEngine := context.String("http")
+	useYaml := context.Bool("yaml")
 
 	app := builder.NewApp()
 	app.ProjectName(name).
 		WorkingDir().
 		Folder().
-		BuildConfigs().
-		BuildConfigToml().
+		BuildConfigs(useYaml).
+		BuildConfig(useYaml).
 		BuildControllerModule().
 		BuildHandlerModule().
 		BuildHandlerRouter(httpEngine).

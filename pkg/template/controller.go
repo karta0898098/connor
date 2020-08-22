@@ -77,6 +77,16 @@ func New{{.Name}}Controller() *{{.Name}}Controller{
 	return &{{.Name}}Controller{}
 }
 
+// RegisterRoute register http route
+func (controller *{{.Name}}Controller) RegisterRoute(route *echo.Echo) {
+	r := route.Group("/api")
+	r.GET("/{{ToLowerCamel .Name}}", controller.List)
+	r.GET("/{{ToLowerCamel .Name}}/:id", controller.Get)
+	r.POST("/{{ToLowerCamel .Name}}/:id", controller.Create)
+	r.PUT("/{{ToLowerCamel .Name}}/:id", controller.Update)
+	r.DELETE("/{{ToLowerCamel .Name}}/:id", controller.Delete)
+}
+
 // Get ...
 func (controller *{{.Name}}Controller) Get(c echo.Context) error{
 	panic("please implement")

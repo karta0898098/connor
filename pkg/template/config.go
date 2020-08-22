@@ -35,8 +35,9 @@ type Config struct {
 // NewConfig read config and create new instance 
 func NewConfig() Config {
 
-	//set file type toml
-	viper.SetConfigType("toml")
+	//set file type toml or yaml
+	viper.AutomaticEnv()
+	viper.SetConfigType("{{.ConfigType}}")
 	var config Config
 	
 	//check user has input config path 

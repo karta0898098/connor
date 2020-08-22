@@ -34,52 +34,70 @@ import (
 	"reflect"
 )
 
-// I{{.Name}}Repository ...
-type I{{.Name}}Repository interface {
-	ReadDB() *gorm.DB
-	WriteDB() *gorm.DB
-	Get(ctx context.Context, condition model.Where{{.Name}}, tx *gorm.DB) (model.{{.Name}}, error)
-	List(ctx context.Context, condition model.Where{{.Name}}, tx *gorm.DB) ([]model.{{.Name}} ,error)
+// {{.Name}}Repository ...
+type {{.Name}}Repository interface {
+	Begin() {{.Name}}Repository
+	Commit() error
+	Rollback() error
+	Get(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) (model.{{.Name}}, error)
+	List(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) ([]model.{{.Name}} ,error)
 	Create(ctx context.Context, data model.{{.Name}}, tx *gorm.DB) (model.{{.Name}}, error)
-	Update(ctx context.Context, condition model.Where{{.Name}}, data interface{}, tx *gorm.DB) error
-	Delete(ctx context.Context, condition model.Where{{.Name}}, tx *gorm.DB) error
-	Count(ctx context.Context, condition model.Where{{.Name}}, tx *gorm.DB) (int,error)
+	Update(ctx context.Context, condition model.Query{{.Name}}, data interface{}) error
+	Delete(ctx context.Context, condition model.Query{{.Name}}) error
+	Count(ctx context.Context, condition model.Query{{.Name}}) (int,error)
 }
 
-// {{.Name}}Repository ...
-type {{.Name}}Repository struct {
+// {{ToLowerCamel .Name}}Repository ...
+type {{ToLowerCamel .Name}}Repository struct {
 	readDB  *gorm.DB
 	writeDB *gorm.DB
 }
 
 
 // New{{.Name}}Repository new constructor
-func New{{.Name}}Repository(conn *db.Connection) I{{.Name}}Repository {
+func New{{.Name}}Repository(conn *db.Connection) {{.Name}}Repository {
 	return &{{.Name}}Repository{
 		readDB:  conn.ReadDB,
 		writeDB: conn.WriteDB,
 	}
 }
 
-// ReadDB ...
-func (repo *{{.Name}}Repository) ReadDB() *gorm.DB {
+// Begin for transactions get tx
+func (repo *{{.Name}}Repository) Begin() {{.Name}}Repository {
+	tx := repo.writeDB.Begin()
+	return &{{ToLowerCamel .Name}}{
+		readDB:  tx,
+		writeDB: tx,
+	}
+}
+
+// Commit for transactions commit
+func (repo *{{ToLowerCamel .Name}}Repository) Commit() error {
+	return repo.writeDB.Commit().Error
+}
+
+// Rollback for transactions rollback
+func (repo *{{ToLowerCamel .Name}}Repository) Rollback() error {
+	return repo.writeDB.Rollback().Error
+}
+
+// forUpdate for transactions rollback
+func (repo *{{ToLowerCamel .Name}}Repository) forUpdate(forUpdate bool) *gorm.DB  {
+	if forUpdate {
+		repo.readDB = repo.readDB.Set("gorm:query_option", "FOR UPDATE")
+	} else {
+		repo.readDB = repo.readDB.Set("gorm:query_option", "LOCK IN SHARE MODE")
+	}
 	return repo.readDB
 }
 
-// WriteDB ...
-func (repo *{{.Name}}Repository) WriteDB() *gorm.DB {
-	return repo.writeDB
-}
 
 // Get {{ToLowerCamel .Name}} ...
-func (repo *{{.Name}}Repository) Get(ctx context.Context, condition model.Where{{.Name}}, tx *gorm.DB) (model.{{.Name}}, error) {
+func (repo *{{ToLowerCamel .Name}}Repository) Get(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) (model.{{.Name}}, error) {
 
-	if tx == nil {
-		tx = repo.readDB
-	}
 
 	var {{ToLowerCamel .Name}} model.{{.Name}}
-	err := tx.Model(&model.{{.Name}}{}).Scopes(condition.Where).First(&{{ToLowerCamel .Name}}).Error
+	err := repo.forUpdate(forUpdate,repo.readDB).Model(&model.{{.Name}}{}).Scopes(condition.Where).First(&{{ToLowerCamel .Name}}).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return model.{{.Name}}{}, errors.Wrap(exception.ErrResourceNotFound, "get {{ToLowerCamel .Name}} from database error")
@@ -91,15 +109,11 @@ func (repo *{{.Name}}Repository) Get(ctx context.Context, condition model.Where{
 }
 
 // List {{ToLowerCamel .Name}} ...
-func (repo *{{.Name}}Repository) List(ctx context.Context, condition model.Where{{.Name}}, tx *gorm.DB) ([]model.{{.Name}} , error) {
-
-	if tx == nil {
-		tx = repo.readDB
-	}
+func (repo *{{ToLowerCamel .Name}}Repository) List(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) ([]model.{{.Name}} , error) {
 
 	var {{ToLowerCamel .Plural}} []model.{{.Name}}
 
-	err := tx.Model(&model.{{.Name}}{}).Scopes(condition.Where).Find(&{{ToLowerCamel .Plural}}).Error
+	err := repo.forUpdate(forUpdate).Model(&model.{{.Name}}{}).Scopes(condition.Where).Find(&{{ToLowerCamel .Plural}}).Error
 	if err != nil {
 		{{ToLowerCamel .Plural}} = make([]model.{{.Name}}, 0)
 		return {{ToLowerCamel .Plural}}, err
@@ -108,13 +122,9 @@ func (repo *{{.Name}}Repository) List(ctx context.Context, condition model.Where
 }
 
 // Create {{ToLowerCamel .Name}} ...
-func (repo *{{.Name}}Repository) Create(ctx context.Context, data model.{{.Name}}, tx *gorm.DB) (model.{{.Name}}, error) {
+func (repo *{{ToLowerCamel .Name}}Repository) Create(ctx context.Context, data model.{{.Name}}) (model.{{.Name}}, error) {
 
-	if tx == nil {
-		tx = repo.writeDB
-	}
-
-	err := tx.Model(&model.{{.Name}}{}).Create(&data).Error
+	err := repo.writeDB.Model(&model.{{.Name}}{}).Create(&data).Error
 	if err != nil {
 		return model.{{.Name}}{}, err
 	}
@@ -123,39 +133,24 @@ func (repo *{{.Name}}Repository) Create(ctx context.Context, data model.{{.Name}
 }
 
 // Update {{ToLowerCamel .Name}} ...
-func (repo *{{.Name}}Repository) Update(ctx context.Context, condition model.Where{{.Name}}, data interface{}, tx *gorm.DB) error {
-
-	if tx == nil {
-		tx = repo.writeDB
-	}
+func (repo *{{ToLowerCamel .Name}}Repository) Update(ctx context.Context, condition model.Query{{.Name}}, data interface{}) error {
 
 	if reflect.DeepEqual(condition, model.Where{{.Name}}{}) {
-		return errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} where condition is nil")
+		return errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
-	{{ToLowerCamel .Name}}, ok := data.(model.{{.Name}})
-
-	if ok{
-		err := tx.Model(&model.{{.Name}}{}).Scopes(condition.Where).Updates({{ToLowerCamel .Name}}).Error
-		return err
-	}
-
-	err := tx.Model(&model.{{.Name}}{}).Scopes(condition.Where).Updates(data).Error
+	err := repo.writeDB.Model(&model.{{.Name}}{}).Scopes(condition.Where).Updates(data).Error
 	return err
 }
 
 // Delete {{ToLowerCamel .Name}} ...
-func (repo *{{.Name}}Repository) Delete(ctx context.Context, condition model.Where{{.Name}}, tx *gorm.DB) error {
-
-	if tx == nil {
-		tx = repo.writeDB
-	}
+func (repo *{{ToLowerCamel .Name}}Repository) Delete(ctx context.Context, condition model.Query{{.Name}}) error {
 
 	if reflect.DeepEqual(condition, model.Where{{.Name}}{}) {
-		return errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} where condition is nil")
+		return errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
-	err := tx.Scopes(condition.Where).Delete(model.{{.Name}}{}).Error
+	err := repo.writeDB.Scopes(condition.Where).Delete(model.{{.Name}}{}).Error
 	if err != nil {
 		return err
 	}
@@ -164,18 +159,15 @@ func (repo *{{.Name}}Repository) Delete(ctx context.Context, condition model.Whe
 }
 
 // Count {{ToLowerCamel .Name}} ...
-func (repo *{{.Name}}Repository) Count(ctx context.Context, condition model.Where{{.Name}} ,tx *gorm.DB) (int,error) {
-	if tx == nil {
-		tx = repo.readDB
-	}
+func (repo *{{ToLowerCamel .Name}}Repository) Count(ctx context.Context, condition model.Where{{.Name}}) (int,error) {
 
 	var count int
 
 	if reflect.DeepEqual(condition, model.Where{{.Name}}{}) {
-		return count,errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} where condition is nil")
+		return count,errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
-	err := tx.Model(&model.{{.Name}}{}).Scopes(condition.Where).Count(&count).Error
+	err := repo.readDB.Model(&model.{{.Name}}{}).Scopes(condition.Where).Count(&count).Error
 	if err != nil{
 		return count,err
 	}

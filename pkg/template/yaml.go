@@ -17,7 +17,7 @@ database:
     user: ""
   write: 
     debug: false
-    host: ""
+    host: "127.0.0.1"
     name: ""
     password: ""
     port: 3306
