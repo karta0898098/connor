@@ -41,7 +41,7 @@ type {{.Name}}Repository interface {
 	Rollback() error
 	Get(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) (model.{{.Name}}, error)
 	List(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) ([]model.{{.Name}} ,error)
-	Create(ctx context.Context, data model.{{.Name}}, tx *gorm.DB) (model.{{.Name}}, error)
+	Create(ctx context.Context, data model.{{.Name}}) (model.{{.Name}}, error)
 	Update(ctx context.Context, condition model.Query{{.Name}}, data interface{}) error
 	Delete(ctx context.Context, condition model.Query{{.Name}}) error
 	Count(ctx context.Context, condition model.Query{{.Name}}) (int,error)
