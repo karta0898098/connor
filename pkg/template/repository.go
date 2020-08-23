@@ -56,16 +56,16 @@ type {{ToLowerCamel .Name}}Repository struct {
 
 // New{{.Name}}Repository new constructor
 func New{{.Name}}Repository(conn *db.Connection) {{.Name}}Repository {
-	return &{{.Name}}Repository{
+	return &{{ToLowerCamel .Name}}Repository{
 		readDB:  conn.ReadDB,
 		writeDB: conn.WriteDB,
 	}
 }
 
 // Begin for transactions get tx
-func (repo *{{.Name}}Repository) Begin() {{.Name}}Repository {
+func (repo *{{ToLowerCamel .Name}}Repository) Begin() {{.Name}}Repository {
 	tx := repo.writeDB.Begin()
-	return &{{ToLowerCamel .Name}}{
+	return &{{ToLowerCamel .Name}}Repository{
 		readDB:  tx,
 		writeDB: tx,
 	}
@@ -97,7 +97,7 @@ func (repo *{{ToLowerCamel .Name}}Repository) Get(ctx context.Context, condition
 
 
 	var {{ToLowerCamel .Name}} model.{{.Name}}
-	err := repo.forUpdate(forUpdate,repo.readDB).Model(&model.{{.Name}}{}).Scopes(condition.Where).First(&{{ToLowerCamel .Name}}).Error
+	err := repo.forUpdate(forUpdate).Model(&model.{{.Name}}{}).Scopes(condition.Where).First(&{{ToLowerCamel .Name}}).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return model.{{.Name}}{}, errors.Wrap(exception.ErrResourceNotFound, "get {{ToLowerCamel .Name}} from database error")
@@ -135,7 +135,7 @@ func (repo *{{ToLowerCamel .Name}}Repository) Create(ctx context.Context, data m
 // Update {{ToLowerCamel .Name}} ...
 func (repo *{{ToLowerCamel .Name}}Repository) Update(ctx context.Context, condition model.Query{{.Name}}, data interface{}) error {
 
-	if reflect.DeepEqual(condition, model.Where{{.Name}}{}) {
+	if reflect.DeepEqual(condition, model.Query{{.Name}}{}) {
 		return errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
@@ -146,7 +146,7 @@ func (repo *{{ToLowerCamel .Name}}Repository) Update(ctx context.Context, condit
 // Delete {{ToLowerCamel .Name}} ...
 func (repo *{{ToLowerCamel .Name}}Repository) Delete(ctx context.Context, condition model.Query{{.Name}}) error {
 
-	if reflect.DeepEqual(condition, model.Where{{.Name}}{}) {
+	if reflect.DeepEqual(condition, model.Query{{.Name}}{}) {
 		return errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
@@ -159,11 +159,11 @@ func (repo *{{ToLowerCamel .Name}}Repository) Delete(ctx context.Context, condit
 }
 
 // Count {{ToLowerCamel .Name}} ...
-func (repo *{{ToLowerCamel .Name}}Repository) Count(ctx context.Context, condition model.Where{{.Name}}) (int,error) {
+func (repo *{{ToLowerCamel .Name}}Repository) Count(ctx context.Context, condition model.Query{{.Name}}) (int,error) {
 
 	var count int
 
-	if reflect.DeepEqual(condition, model.Where{{.Name}}{}) {
+	if reflect.DeepEqual(condition, model.Query{{.Name}}{}) {
 		return count,errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
