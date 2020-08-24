@@ -12,7 +12,7 @@ import (
 const RepositoryModule = `package repository
 
 import (
-	"github.com/karta0898098/kara/db"
+	"github.com/karta0898098/kara/db/rw/db"
 	"go.uber.org/fx"
 )
 
@@ -27,7 +27,7 @@ const Repository = `package repository
 import (
 	"context"
 	"github.com/jinzhu/gorm"
-	"github.com/karta0898098/kara/db"
+	"github.com/karta0898098/kara/db/rw/db"
     "github.com/karta0898098/kara/exception"
 	"github.com/pkg/errors"
 	"{{.ProjectName}}/pkg/model"
