@@ -12,6 +12,7 @@ import (
 type FolderBuilder struct {
 	workingDir  string
 	projectName string
+	gomod       string
 	packages    []string
 	folders     []string
 }
@@ -24,6 +25,12 @@ func NewFolderBuilder(workingDir string) *FolderBuilder {
 // ProjectName set project name
 func (f *FolderBuilder) ProjectName(name string) *FolderBuilder {
 	f.projectName = name
+	return f
+}
+
+// GoMod set project mod
+func (f *FolderBuilder) GoMod(path string) *FolderBuilder {
+	f.gomod = path
 	return f
 }
 
@@ -76,9 +83,13 @@ func (f *FolderBuilder) Build() {
 		}
 	}
 
+	if f.gomod == "" {
+		f.gomod = f.projectName
+	}
+
 	if len(f.packages) > 0 {
 		//執行go mod
-		cmd := exec.Command("go", "mod", "init", f.projectName)
+		cmd := exec.Command("go", "mod", "init", f.gomod)
 		cmd.Dir = f.workingDir
 		err = cmd.Run()
 

@@ -19,6 +19,13 @@ func NewInit() []cli.Flag {
 			Value:    "echo",
 			Hidden:   false,
 		},
+		&cli.StringFlag{
+			Name:     "mod",
+			Required: false,
+			Usage:    "set go mod",
+			Value:    "",
+			Hidden:   false,
+		},
 		&cli.BoolFlag{
 			Name: "yaml",
 			Usage: "chose config use yaml or toml",

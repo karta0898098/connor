@@ -33,8 +33,9 @@ func AddController(context *cli.Context) error {
 	projectName := util.FindProjectName()
 	httpEngine := util.FindHttpEngine()
 
+
 	app := builder.NewApp()
-	app.ProjectName(projectName).
+	app.GoMod(projectName).
 		WorkingDir()
 
 	if controller != "" {

@@ -9,6 +9,7 @@ import (
 type AppBuilder struct {
 	projectName string
 	workingDir  string
+	gomodPath   string
 	actions     []ExecAction
 }
 
@@ -38,6 +39,17 @@ func (app *AppBuilder) WorkingDir() *AppBuilder {
 	return app
 }
 
+// GoMod to set gomod
+func (app *AppBuilder) GoMod(path string) *AppBuilder {
+	if path == "" {
+		app.gomodPath = app.projectName
+	} else {
+		app.gomodPath = path
+	}
+
+	return app
+}
+
 // Folder create default folder structure & go mod init
 func (app *AppBuilder) Folder() *AppBuilder {
 
@@ -57,7 +69,6 @@ func (app *AppBuilder) Folder() *AppBuilder {
 		"pkg/repository",
 	}
 
-
 	builder := NewFolderBuilder(app.workingDir)
 	builder.
 		ProjectName(app.projectName).
@@ -68,7 +79,7 @@ func (app *AppBuilder) Folder() *AppBuilder {
 	return app
 }
 
-func (app *AppBuilder) BuildGoMod() *AppBuilder  {
+func (app *AppBuilder) BuildGoMod() *AppBuilder {
 
 	packages := []string{
 		"github.com/jinzhu/gorm",
@@ -84,6 +95,7 @@ func (app *AppBuilder) BuildGoMod() *AppBuilder  {
 	builder := NewFolderBuilder(app.workingDir)
 	builder.
 		ProjectName(app.projectName).
+		GoMod(app.gomodPath).
 		Packages(packages)
 
 	app.actions = append(app.actions, builder)

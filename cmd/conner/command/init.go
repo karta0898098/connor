@@ -11,11 +11,14 @@ func Init(context *cli.Context) error {
 	name := context.String("name")
 	httpEngine := context.String("http")
 	useYaml := context.Bool("yaml")
+	gomod := context.String("mod")
 
 	app := builder.NewApp()
 	app.ProjectName(name).
+		GoMod(gomod).
 		WorkingDir().
 		Folder().
+		BuildDockerfile().
 		BuildConfigs(useYaml).
 		BuildConfig(useYaml).
 		BuildControllerModule().

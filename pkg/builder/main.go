@@ -35,7 +35,7 @@ func (app *AppBuilder) BuildServer(http string) *AppBuilder {
 		Path:        "cmd/" + app.projectName,
 		File:        "server.go",
 		Data: H{
-			"ProjectName": app.projectName,
+			"ProjectName": app.gomodPath,
 			"Engine":      engine,
 		},
 	}

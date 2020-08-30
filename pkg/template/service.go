@@ -29,7 +29,7 @@ import (
 type {{.Name}}Service interface {
 	Get(ctx context.Context, condition model.Query{{.Name}}) (model.{{.Name}}, error)
 	List(ctx context.Context, condition model.Query{{.Name}}) ([]model.{{.Name}}, error)
-	Create(ctx context.Context, {{ToLowerCamel .Name}} Query.{{.Name}}) (model.{{.Name}}, error)
+	Create(ctx context.Context, {{ToLowerCamel .Name}} model.{{.Name}}) (model.{{.Name}}, error)
 	Update(ctx context.Context, condition model.Query{{.Name}} , data interface{}) error
 	Delete(ctx context.Context, condition model.Query{{.Name}}) error
 }

@@ -15,7 +15,7 @@ func (app *AppBuilder) BuildHandlerModule() *AppBuilder {
 		Path:        "pkg/handler",
 		File:        "handler.go",
 		Data: H{
-			"ProjectName": app.projectName,
+			"ProjectName": app.gomodPath,
 		},
 	}
 
