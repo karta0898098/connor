@@ -26,7 +26,7 @@ const Repository = `package repository
 
 import (
 	"context"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"github.com/karta0898098/kara/db/rw/db"
     "github.com/karta0898098/kara/exception"
 	"github.com/pkg/errors"
@@ -36,9 +36,6 @@ import (
 
 // {{.Name}}Repository ...
 type {{.Name}}Repository interface {
-	Begin() {{.Name}}Repository
-	Commit() error
-	Rollback() error
 	Get(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) (model.{{.Name}}, error)
 	List(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) ([]model.{{.Name}} ,error)
 	Create(ctx context.Context, data model.{{.Name}}) (model.{{.Name}}, error)
@@ -94,10 +91,9 @@ func (repo *{{ToLowerCamel .Name}}Repository) forUpdate(forUpdate bool) *gorm.DB
 
 // Get {{ToLowerCamel .Name}} ...
 func (repo *{{ToLowerCamel .Name}}Repository) Get(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) (model.{{.Name}}, error) {
-
-
 	var {{ToLowerCamel .Name}} model.{{.Name}}
-	err := repo.forUpdate(forUpdate).Model(&model.{{.Name}}{}).Scopes(condition.Where).First(&{{ToLowerCamel .Name}}).Error
+
+	err := repo.forUpdate(forUpdate).WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).First(&{{ToLowerCamel .Name}}).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return model.{{.Name}}{}, errors.Wrap(exception.ErrResourceNotFound, "get {{ToLowerCamel .Name}} from database error")
@@ -113,7 +109,7 @@ func (repo *{{ToLowerCamel .Name}}Repository) List(ctx context.Context, conditio
 
 	var {{ToLowerCamel .Plural}} []model.{{.Name}}
 
-	err := repo.forUpdate(forUpdate).Model(&model.{{.Name}}{}).Scopes(condition.Where).Find(&{{ToLowerCamel .Plural}}).Error
+	err := repo.forUpdate(forUpdate).WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).Find(&{{ToLowerCamel .Plural}}).Error
 	if err != nil {
 		{{ToLowerCamel .Plural}} = make([]model.{{.Name}}, 0)
 		return {{ToLowerCamel .Plural}}, err
@@ -124,7 +120,7 @@ func (repo *{{ToLowerCamel .Name}}Repository) List(ctx context.Context, conditio
 // Create {{ToLowerCamel .Name}} ...
 func (repo *{{ToLowerCamel .Name}}Repository) Create(ctx context.Context, data model.{{.Name}}) (model.{{.Name}}, error) {
 
-	err := repo.writeDB.Model(&model.{{.Name}}{}).Create(&data).Error
+	err := repo.writeDB.WithContext(ctx).Model(&model.{{.Name}}{}).Create(&data).Error
 	if err != nil {
 		return model.{{.Name}}{}, err
 	}
@@ -139,7 +135,7 @@ func (repo *{{ToLowerCamel .Name}}Repository) Update(ctx context.Context, condit
 		return errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
-	err := repo.writeDB.Model(&model.{{.Name}}{}).Scopes(condition.Where).Updates(data).Error
+	err := repo.writeDB.WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).Updates(data).Error
 	return err
 }
 
@@ -150,7 +146,7 @@ func (repo *{{ToLowerCamel .Name}}Repository) Delete(ctx context.Context, condit
 		return errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
-	err := repo.writeDB.Scopes(condition.Where).Delete(model.{{.Name}}{}).Error
+	err := repo.writeDB.WithContext(ctx).Scopes(condition.Where).Delete(model.{{.Name}}{}).Error
 	if err != nil {
 		return err
 	}
@@ -167,7 +163,7 @@ func (repo *{{ToLowerCamel .Name}}Repository) Count(ctx context.Context, conditi
 		return count,errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
-	err := repo.readDB.Model(&model.{{.Name}}{}).Scopes(condition.Where).Count(&count).Error
+	err := repo.readDB.WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).Count(&count).Error
 	if err != nil{
 		return count,err
 	}

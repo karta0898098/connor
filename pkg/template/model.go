@@ -50,7 +50,7 @@ func AddModelWhereAndUpdate(code []byte) string {
 				imptSpec, ok := spec.(*dst.ImportSpec)
 				if ok {
 					importedPkg++
-					if imptSpec.Path.Value == strconv.Quote("github.com/jinzhu/gorm") {
+					if imptSpec.Path.Value == strconv.Quote("gorm.io/gorm") {
 						hasGormImported = true
 					}
 
@@ -73,7 +73,7 @@ func AddModelWhereAndUpdate(code []byte) string {
 						Name: nil,
 						Path: &dst.BasicLit{
 							Kind:  token.STRING,
-							Value: strconv.Quote("github.com/jinzhu/gorm"),
+							Value: strconv.Quote("gorm.io/gorm"),
 						},
 					},
 				},
@@ -107,7 +107,7 @@ func AddModelWhereAndUpdate(code []byte) string {
 						genDecl.Specs = append(genDecl.Specs, &dst.ImportSpec{
 							Path: &dst.BasicLit{
 								Kind:  token.STRING,
-								Value: strconv.Quote("github.com/jinzhu/gorm"),
+								Value: strconv.Quote("gorm.io/gorm"),
 							},
 						})
 					}

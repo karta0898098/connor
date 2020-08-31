@@ -82,8 +82,8 @@ func (app *AppBuilder) Folder() *AppBuilder {
 func (app *AppBuilder) BuildGoMod() *AppBuilder {
 
 	packages := []string{
-		"github.com/jinzhu/gorm",
-		"github.com/karta0898098/kara@v1.1.5",
+		"gorm.io/gorm",
+		"github.com/karta0898098/kara@v1.1.6",
 		"github.com/gin-gonic/gin",
 		"github.com/labstack/echo/v4",
 		"github.com/spf13/cobra",
