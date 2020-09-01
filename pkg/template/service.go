@@ -13,6 +13,7 @@ const ServiceModule = `package service
 
 import "go.uber.org/fx"
 
+// Module for fx provide service
 var Module = fx.Provide()
 `
 
@@ -48,27 +49,27 @@ func New{{.Name}}Service(repo repository.{{.Name}}Repository) {{.Name}}Service {
 
 // Get ...
 func (srv *{{ToLowerCamel .Name}}Service) Get(ctx context.Context, where model.Query{{.Name}}) (model.{{.Name}}, error) {
-	return srv.repo.Get(ctx, where, false)
+	return srv.repo.Get{{.Name}}(ctx, where, false)
 }
 
 // List ...
 func (srv *{{ToLowerCamel .Name}}Service) List(ctx context.Context, where model.Query{{.Name}}) ([]model.{{.Name}}, error) {
-	return srv.repo.List(ctx, where, false)
+	return srv.repo.List{{ToPlural .Name}}(ctx, where, false)
 }
 
 // Create ...
 func (srv *{{ToLowerCamel .Name}}Service) Create(ctx context.Context, {{ToLowerCamel .Name}} model.{{.Name}}) (model.{{.Name}}, error) {
-	return srv.repo.Create(ctx, {{ToLowerCamel .Name}})
+	return srv.repo.Create{{.Name}}(ctx, {{ToLowerCamel .Name}})
 }
 
 // Update ...
 func (srv *{{ToLowerCamel .Name}}Service) Update(ctx context.Context, where model.Query{{.Name}},data interface{}) error {
-	return srv.repo.Update(ctx, where, data)
+	return srv.repo.Update{{.Name}}(ctx, where, data)
 }
 
 // Delete ...
 func (srv {{ToLowerCamel .Name}}Service) Delete(ctx context.Context, where model.Query{{.Name}}) error {
-	return srv.repo.Delete(ctx, where)
+	return srv.repo.Delete{{.Name}}(ctx, where)
 }
 `
 

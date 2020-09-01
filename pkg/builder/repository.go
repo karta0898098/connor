@@ -70,7 +70,7 @@ func (app *AppBuilder) AddRepository(name string) *AppBuilder {
 	}
 
 	builder := &CodeBuilder{
-		Template: template.AddRepositoryModule("New" + strcase.ToCamel(name) + "Repository"),
+		Template: template.AddRepositoryModule(strcase.ToCamel(name) + "Repository"),
 		Path:     "pkg/repository",
 		File:     "module.go",
 	}

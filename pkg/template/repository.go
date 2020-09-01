@@ -12,14 +12,129 @@ import (
 const RepositoryModule = `package repository
 
 import (
+	"context"
+
 	"github.com/karta0898098/kara/db/rw/db"
+	"github.com/pkg/errors"
 	"go.uber.org/fx"
+	"gorm.io/gorm"
 )
 
 // Module for export repository to fx injection
 var Module = fx.Provide(
 	db.NewConnection,
-)`
+	NewRepository,
+)
+
+// ErrNilTx error nil tx
+var ErrNilTx = errors.New("tx is nil, begin first or use Transaction")
+
+// Repository ...
+type Repository interface {
+	Transaction(
+		ctx context.Context,
+		callback func(ctx context.Context, txRepo Repository) error,
+	) error
+	commit() error
+	rollback() error
+}
+
+type repository struct {
+	readDB  *gorm.DB
+	writeDB *gorm.DB
+	tx      *gorm.DB
+}
+
+// NewRepository repository new constructor
+func NewRepository(conn *db.Connection) Repository {
+	return &repository{
+		readDB:  conn.ReadDB,
+		writeDB: conn.WriteDB,
+	}
+}
+
+// forUpdate for transactions rollback
+func (repo *repository) forUpdate(forUpdate bool) *gorm.DB {
+	tx := repo.getWriteDB()
+	if forUpdate {
+		tx = tx.Set("gorm:query_option", "FOR UPDATE")
+	} else {
+		tx = tx.Set("gorm:query_option", "LOCK IN SHARE MODE")
+	}
+	return tx
+}
+
+func (repo *repository) begin() Repository {
+	tx := repo.writeDB.Begin()
+	return &repository{
+		tx:      tx,
+		readDB:  repo.readDB,
+		writeDB: repo.writeDB,
+	}
+}
+
+
+func (repo *repository) getWriteDB() *gorm.DB {
+	if repo.tx != nil {
+		return repo.tx
+	}
+	return repo.writeDB
+}
+
+func (repo *repository) getReadDB() *gorm.DB {
+	if repo.tx != nil {
+		return repo.tx
+	}
+	return repo.readDB
+}
+
+func (repo *repository) commit() error {
+	if repo.tx == nil {
+		return ErrNilTx
+	}
+
+	return repo.tx.Commit().Error
+}
+
+func (repo *repository) rollback() error {
+	if repo.tx == nil {
+		return ErrNilTx
+	}
+
+	return repo.tx.Rollback().Error
+}
+
+// Transaction start rdbms transaction scope
+func (repo *repository) Transaction(ctx context.Context, callback func(ctx context.Context, txRepo Repository) error) error {
+	var (
+		tx          Repository
+		callbackErr error
+		err         error
+	)
+
+	tx = repo.begin()
+
+	callbackErr = callback(ctx, tx)
+
+	if callbackErr != nil {
+		err = tx.rollback()
+	} else {
+		if err = tx.commit(); err != nil {
+			err = tx.rollback()
+		}
+	}
+
+	if err != nil {
+		if callbackErr != nil {
+			err = errors.Wrapf(err, "transaction callback error reason : %v", callbackErr)
+		}
+		return err
+	}
+
+	return callbackErr
+}
+
+`
 
 // Repository template
 const Repository = `package repository
@@ -27,7 +142,6 @@ const Repository = `package repository
 import (
 	"context"
 	"gorm.io/gorm"
-	"github.com/karta0898098/kara/db/rw/db"
     "github.com/karta0898098/kara/exception"
 	"github.com/pkg/errors"
 	"{{.ProjectName}}/pkg/model"
@@ -36,61 +150,17 @@ import (
 
 // {{.Name}}Repository ...
 type {{.Name}}Repository interface {
-	Get(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) (model.{{.Name}}, error)
-	List(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) ([]model.{{.Name}} ,error)
-	Create(ctx context.Context, data model.{{.Name}}) (model.{{.Name}}, error)
-	Update(ctx context.Context, condition model.Query{{.Name}}, data interface{}) error
-	Delete(ctx context.Context, condition model.Query{{.Name}}) error
-	Count(ctx context.Context, condition model.Query{{.Name}}) (int,error)
-}
-
-// {{ToLowerCamel .Name}}Repository ...
-type {{ToLowerCamel .Name}}Repository struct {
-	readDB  *gorm.DB
-	writeDB *gorm.DB
+	Get{{.Name}}(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) (model.{{.Name}}, error)
+	List{{ToPlural .Name}}(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) ([]model.{{.Name}} ,error)
+	Create{{.Name}}(ctx context.Context, data model.{{.Name}}) (model.{{.Name}}, error)
+	Update{{.Name}}(ctx context.Context, condition model.Query{{.Name}}, data interface{}) error
+	Delete{{.Name}}(ctx context.Context, condition model.Query{{.Name}}) error
+	Count{{.Name}}(ctx context.Context, condition model.Query{{.Name}}) (int64,error)
 }
 
 
-// New{{.Name}}Repository new constructor
-func New{{.Name}}Repository(conn *db.Connection) {{.Name}}Repository {
-	return &{{ToLowerCamel .Name}}Repository{
-		readDB:  conn.ReadDB,
-		writeDB: conn.WriteDB,
-	}
-}
-
-// Begin for transactions get tx
-func (repo *{{ToLowerCamel .Name}}Repository) Begin() {{.Name}}Repository {
-	tx := repo.writeDB.Begin()
-	return &{{ToLowerCamel .Name}}Repository{
-		readDB:  tx,
-		writeDB: tx,
-	}
-}
-
-// Commit for transactions commit
-func (repo *{{ToLowerCamel .Name}}Repository) Commit() error {
-	return repo.writeDB.Commit().Error
-}
-
-// Rollback for transactions rollback
-func (repo *{{ToLowerCamel .Name}}Repository) Rollback() error {
-	return repo.writeDB.Rollback().Error
-}
-
-// forUpdate for transactions rollback
-func (repo *{{ToLowerCamel .Name}}Repository) forUpdate(forUpdate bool) *gorm.DB  {
-	if forUpdate {
-		repo.readDB = repo.readDB.Set("gorm:query_option", "FOR UPDATE")
-	} else {
-		repo.readDB = repo.readDB.Set("gorm:query_option", "LOCK IN SHARE MODE")
-	}
-	return repo.readDB
-}
-
-
-// Get {{ToLowerCamel .Name}} ...
-func (repo *{{ToLowerCamel .Name}}Repository) Get(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) (model.{{.Name}}, error) {
+// Get{{.Name}} rdbms get {{ToLowerCamel .Name}}
+func (repo *repository) Get{{.Name}}(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) (model.{{.Name}}, error) {
 	var {{ToLowerCamel .Name}} model.{{.Name}}
 
 	err := repo.forUpdate(forUpdate).WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).First(&{{ToLowerCamel .Name}}).Error
@@ -104,9 +174,8 @@ func (repo *{{ToLowerCamel .Name}}Repository) Get(ctx context.Context, condition
 	return {{ToLowerCamel .Name}}, nil
 }
 
-// List {{ToLowerCamel .Name}} ...
-func (repo *{{ToLowerCamel .Name}}Repository) List(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) ([]model.{{.Name}} , error) {
-
+// List{{ToPlural .Name}} rdbms list {{ToLowerCamel .Name}}
+func (repo *repository) List{{ToPlural .Name}}(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) ([]model.{{.Name}} , error) {
 	var {{ToLowerCamel .Plural}} []model.{{.Name}}
 
 	err := repo.forUpdate(forUpdate).WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).Find(&{{ToLowerCamel .Plural}}).Error
@@ -117,10 +186,9 @@ func (repo *{{ToLowerCamel .Name}}Repository) List(ctx context.Context, conditio
 	return {{ToLowerCamel .Plural}}, nil
 }
 
-// Create {{ToLowerCamel .Name}} ...
-func (repo *{{ToLowerCamel .Name}}Repository) Create(ctx context.Context, data model.{{.Name}}) (model.{{.Name}}, error) {
-
-	err := repo.writeDB.WithContext(ctx).Model(&model.{{.Name}}{}).Create(&data).Error
+// Create{{.Name}} rdbms create {{ToLowerCamel .Name}}
+func (repo *repository) Create{{.Name}}(ctx context.Context, data model.{{.Name}}) (model.{{.Name}}, error) {
+	err := repo.getWriteDB().WithContext(ctx).Model(&model.{{.Name}}{}).Create(&data).Error
 	if err != nil {
 		return model.{{.Name}}{}, err
 	}
@@ -128,25 +196,23 @@ func (repo *{{ToLowerCamel .Name}}Repository) Create(ctx context.Context, data m
 	return data, nil
 }
 
-// Update {{ToLowerCamel .Name}} ...
-func (repo *{{ToLowerCamel .Name}}Repository) Update(ctx context.Context, condition model.Query{{.Name}}, data interface{}) error {
-
+// Update{{.Name}} rdbms update {{ToLowerCamel .Name}}
+func (repo *repository) Update{{.Name}}(ctx context.Context, condition model.Query{{.Name}}, data interface{}) error {
 	if reflect.DeepEqual(condition, model.Query{{.Name}}{}) {
 		return errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
-	err := repo.writeDB.WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).Updates(data).Error
+	err := repo.getWriteDB().WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).Updates(data).Error
 	return err
 }
 
-// Delete {{ToLowerCamel .Name}} ...
-func (repo *{{ToLowerCamel .Name}}Repository) Delete(ctx context.Context, condition model.Query{{.Name}}) error {
-
+// Delete{{.Name}} rdbms delete {{ToLowerCamel .Name}}
+func (repo *repository) Delete{{.Name}}(ctx context.Context, condition model.Query{{.Name}}) error {
 	if reflect.DeepEqual(condition, model.Query{{.Name}}{}) {
 		return errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
-	err := repo.writeDB.WithContext(ctx).Scopes(condition.Where).Delete(model.{{.Name}}{}).Error
+	err := repo.getWriteDB().WithContext(ctx).Scopes(condition.Where).Delete(model.{{.Name}}{}).Error
 	if err != nil {
 		return err
 	}
@@ -154,16 +220,15 @@ func (repo *{{ToLowerCamel .Name}}Repository) Delete(ctx context.Context, condit
 	return nil
 }
 
-// Count {{ToLowerCamel .Name}} ...
-func (repo *{{ToLowerCamel .Name}}Repository) Count(ctx context.Context, condition model.Query{{.Name}}) (int,error) {
-
-	var count int
+// Count{{.Name}} rdbms count {{ToLowerCamel .Name}}
+func (repo *repository) Count{{.Name}}(ctx context.Context, condition model.Query{{.Name}}) (int64,error) {
+	var count int64
 
 	if reflect.DeepEqual(condition, model.Query{{.Name}}{}) {
 		return count,errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
-	err := repo.readDB.WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).Count(&count).Error
+	err := repo.getReadDB().WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).Count(&count).Error
 	if err != nil{
 		return count,err
 	}
@@ -181,23 +246,26 @@ func AddRepositoryModule(repo string) string {
 		return ""
 	}
 
-	spec := f.Decls[1].(*dst.GenDecl).Specs
-
-	// scan all go source code
-	// find to var Module = fx.Provide()
-	for index, item := range spec {
-
-		if item.(*dst.ValueSpec).Names[index].Name == "Module" {
-			call := item.(*dst.ValueSpec).Values[0].(*dst.CallExpr)
-
-			call.Decs.Before = dst.EmptyLine
-			call.Decs.After = dst.EmptyLine
-			call.Args = append(call.Args, dst.NewIdent(repo))
-			for _, v := range call.Args {
-				v, ok := v.(*dst.Ident)
+	for i := 0; i < len(f.Decls); i++ {
+		specsTree, ok := f.Decls[i].(*dst.GenDecl)
+		if ok {
+			for _, spec := range specsTree.Specs {
+				typeSpec, ok := spec.(*dst.TypeSpec)
 				if ok {
-					v.Decs.Before = dst.NewLine
-					v.Decs.After = dst.NewLine
+					if typeSpec.Name.Name == "Repository" {
+						interfaceType, ok := typeSpec.Type.(*dst.InterfaceType)
+						if ok {
+							interfaceType.Methods.List = append(interfaceType.Methods.List, &dst.Field{
+								Names: []*dst.Ident{},
+								Type: &dst.Ident{
+									Name: repo,
+									Decs: dst.IdentDecorations{},
+								},
+								Tag:  nil,
+								Decs: dst.FieldDecorations{},
+							})
+						}
+					}
 				}
 			}
 		}
@@ -205,6 +273,7 @@ func AddRepositoryModule(repo string) string {
 
 	var buf bytes.Buffer
 	err = decorator.Fprint(&buf, f)
+
 	if err != nil {
 		fmt.Println("can't add service in module reason: ", err)
 		return ""
