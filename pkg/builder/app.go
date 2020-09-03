@@ -83,7 +83,7 @@ func (app *AppBuilder) BuildGoMod() *AppBuilder {
 
 	packages := []string{
 		"gorm.io/gorm",
-		"github.com/karta0898098/kara@v1.1.6",
+		"github.com/karta0898098/kara",
 		"github.com/gin-gonic/gin",
 		"github.com/labstack/echo/v4",
 		"github.com/spf13/cobra",
