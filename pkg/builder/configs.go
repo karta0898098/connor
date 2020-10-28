@@ -4,8 +4,8 @@ import "github.com/karta0898098/connor/pkg/template"
 
 // BuildConfigs build configs/config.go
 func (app *AppBuilder) BuildConfigs(useYaml bool) *AppBuilder {
-
 	configType := "toml"
+
 	if useYaml {
 		configType = "yaml"
 	}
@@ -26,8 +26,8 @@ func (app *AppBuilder) BuildConfigs(useYaml bool) *AppBuilder {
 
 // BuildConfig build app.toml for lunch app
 func (app *AppBuilder) BuildConfig(useYaml bool) *AppBuilder {
-
 	builder := &CodeBuilder{}
+
 	if !useYaml {
 		builder = &CodeBuilder{
 			Template:    template.AppToml,

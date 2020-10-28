@@ -49,7 +49,7 @@ func (app *AppBuilder) AddModelWhereAndUpdate(filePath, name string) *AppBuilder
 	code, _ := ioutil.ReadFile(filePath)
 
 	builder := &CodeBuilder{
-		Template: template.AddModelWhereAndUpdate(code),
+		Template: template.AddModelQueryCondition(code),
 		Path:     "pkg/model",
 		File:     strcase.ToSnake(name) + ".go",
 		Data: H{

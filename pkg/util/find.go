@@ -12,7 +12,6 @@ import (
 
 // FindModelName ...
 func FindModelName(path string) string {
-
 	code, err := ioutil.ReadFile(path)
 	if err != nil {
 		fmt.Println("can't find model name reason: ", err)
@@ -46,6 +45,7 @@ func FindModelName(path string) string {
 // FindProjectName ...
 func FindProjectName() string {
 	var outBuf bytes.Buffer
+
 	process := exec.Command("go", "mod", "edit", "-json")
 	process.Stdout = &outBuf
 	process.Run()
@@ -61,8 +61,8 @@ func FindProjectName() string {
 
 // FindHttpEngine ...
 func FindHttpEngine() string {
-
 	var outBuf bytes.Buffer
+
 	process := exec.Command("go", "mod", "edit", "-json")
 	process.Stdout = &outBuf
 	process.Run()

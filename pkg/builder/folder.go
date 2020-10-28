@@ -48,8 +48,8 @@ func (f *FolderBuilder) Packages(names []string) *FolderBuilder {
 
 // Folder set want to add folder for create
 func (f *FolderBuilder) Folder(name string) *FolderBuilder {
-
 	absName := ""
+
 	if name != f.projectName {
 		absName = path.Join(f.projectName, name)
 	}

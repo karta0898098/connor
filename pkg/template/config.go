@@ -34,7 +34,6 @@ type Config struct {
 
 // NewConfig read config and create new instance 
 func NewConfig() Config {
-
 	//set file type toml or yaml
 	viper.AutomaticEnv()
 	viper.SetConfigType("{{.ConfigType}}")

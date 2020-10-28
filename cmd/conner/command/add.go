@@ -57,6 +57,7 @@ func AddEntity(context *cli.Context) error {
 	filePath := context.String("file")
 	srv := context.Bool("srv")
 	repo := context.Bool("repo")
+	dto := context.Bool("dto")
 
 	projectName := util.FindProjectName()
 
@@ -76,6 +77,10 @@ func AddEntity(context *cli.Context) error {
 		if srv {
 			app = app.BuildService(model)
 			app = app.AddServiceModule(model)
+		}
+
+		if dto{
+
 		}
 	}
 

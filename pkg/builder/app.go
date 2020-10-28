@@ -52,7 +52,6 @@ func (app *AppBuilder) GoMod(path string) *AppBuilder {
 
 // Folder create default folder structure & go mod init
 func (app *AppBuilder) Folder() *AppBuilder {
-
 	folders := []string{
 		app.projectName,
 		"cmd",
@@ -80,7 +79,6 @@ func (app *AppBuilder) Folder() *AppBuilder {
 }
 
 func (app *AppBuilder) BuildGoMod() *AppBuilder {
-
 	packages := []string{
 		"gorm.io/gorm",
 		"github.com/karta0898098/kara",

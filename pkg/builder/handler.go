@@ -8,7 +8,6 @@ import (
 
 // BuildHandlerModule create build handler.go
 func (app *AppBuilder) BuildHandlerModule() *AppBuilder {
-
 	builder := &CodeBuilder{
 		Template:    template.Handler,
 		ProjectName: app.projectName,
@@ -25,7 +24,6 @@ func (app *AppBuilder) BuildHandlerModule() *AppBuilder {
 
 // BuildHandlerRouter build handler router.go
 func (app *AppBuilder) BuildHandlerRouter(http string) *AppBuilder {
-
 	tmpl := ""
 	if http == "gin" {
 		tmpl = template.GinRouter

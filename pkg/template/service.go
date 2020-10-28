@@ -28,48 +28,64 @@ import (
 
 // {{.Name}}Service {{.Name}} service implement...
 type {{.Name}}Service interface {
-	Get(ctx context.Context, condition model.Query{{.Name}}) (model.{{.Name}}, error)
-	List(ctx context.Context, condition model.Query{{.Name}}) ([]model.{{.Name}}, error)
+	Get(ctx context.Context, query model.Query{{.Name}}) (model.{{.Name}}, error)
+	List(ctx context.Context, query model.Query{{.Name}}) ([]model.{{.Name}},int64 ,error)
 	Create(ctx context.Context, {{ToLowerCamel .Name}} model.{{.Name}}) (model.{{.Name}}, error)
-	Update(ctx context.Context, condition model.Query{{.Name}} , data interface{}) error
-	Delete(ctx context.Context, condition model.Query{{.Name}}) error
+	Update(ctx context.Context, query model.Query{{.Name}} , data interface{}) error
+	Delete(ctx context.Context, query model.Query{{.Name}}) error
 }
 
 // {{ToLowerCamel .Name}}Service {{ToLowerCamel .Name}} service  ...
 type {{ToLowerCamel .Name}}Service struct {
-	repo repository.{{.Name}}Repository
+	repo repository.Repository
 }
 
 // New{{.Name}}Service new service constructor
-func New{{.Name}}Service(repo repository.{{.Name}}Repository) {{.Name}}Service {
+func New{{.Name}}Service(repo repository.Repository) {{.Name}}Service {
 	return &{{ToLowerCamel .Name}}Service{
 		repo: repo,
 	}
 }
 
 // Get ...
-func (srv *{{ToLowerCamel .Name}}Service) Get(ctx context.Context, where model.Query{{.Name}}) (model.{{.Name}}, error) {
-	return srv.repo.Get{{.Name}}(ctx, where, false)
+func (srv {{ToLowerCamel .Name}}Service) Get(ctx context.Context, query model.Query{{.Name}}) (model.{{.Name}}, error) {
+	return srv.repo.Get{{.Name}}(ctx, query)
 }
 
 // List ...
-func (srv *{{ToLowerCamel .Name}}Service) List(ctx context.Context, where model.Query{{.Name}}) ([]model.{{.Name}}, error) {
-	return srv.repo.List{{ToPlural .Name}}(ctx, where, false)
+func (srv {{ToLowerCamel .Name}}Service) List(ctx context.Context, query model.Query{{.Name}}) ([]model.{{.Name}}, int64 ,error) {
+	var(
+		{{ToLowerPlural .Name}} []model.{{.Name}}
+		total int64
+		err error
+	)
+
+	{{ToLowerPlural .Name}}, err = srv.repo.List{{ToPlural .Name}}(ctx, query)
+	if err != nil{
+		return {{ToLowerPlural .Name}}, total, err
+	}
+
+	total, err = srv.repo.Count{{.Name}}(ctx, query)
+	if err != nil{
+		return {{ToLowerPlural .Name}}, total, err
+	}
+	
+	return {{ToLowerPlural .Name}}, total, err
 }
 
 // Create ...
-func (srv *{{ToLowerCamel .Name}}Service) Create(ctx context.Context, {{ToLowerCamel .Name}} model.{{.Name}}) (model.{{.Name}}, error) {
+func (srv {{ToLowerCamel .Name}}Service) Create(ctx context.Context, {{ToLowerCamel .Name}} model.{{.Name}}) (model.{{.Name}}, error) {
 	return srv.repo.Create{{.Name}}(ctx, {{ToLowerCamel .Name}})
 }
 
 // Update ...
-func (srv *{{ToLowerCamel .Name}}Service) Update(ctx context.Context, where model.Query{{.Name}},data interface{}) error {
-	return srv.repo.Update{{.Name}}(ctx, where, data)
+func (srv {{ToLowerCamel .Name}}Service) Update(ctx context.Context, query model.Query{{.Name}},data interface{}) error {
+	return srv.repo.Update{{.Name}}(ctx, query, data)
 }
 
 // Delete ...
-func (srv {{ToLowerCamel .Name}}Service) Delete(ctx context.Context, where model.Query{{.Name}}) error {
-	return srv.repo.Delete{{.Name}}(ctx, where)
+func (srv {{ToLowerCamel .Name}}Service) Delete(ctx context.Context, query model.Query{{.Name}}) error {
+	return srv.repo.Delete{{.Name}}(ctx, query)
 }
 `
 
@@ -114,4 +130,3 @@ func AddServiceModule(repo string) string {
 
 	return buf.String()
 }
-

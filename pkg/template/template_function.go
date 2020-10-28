@@ -8,9 +8,10 @@ import (
 
 // TemplateMap ...
 var Map = template.FuncMap{
-	"ToLowerCamel": ToLowerCamel,
-	"ToCamel":      ToCamel,
-	"ToPlural":     ToPlural,
+	"ToLowerCamel":  ToLowerCamel,
+	"ToCamel":       ToCamel,
+	"ToPlural":      ToPlural,
+	"ToLowerPlural": ToLowerPlural,
 }
 
 // ToLowerCamel ...
@@ -23,6 +24,10 @@ func ToCamel(name string) string {
 	return strcase.ToCamel(name)
 }
 
-func ToPlural(name string)string {
+func ToPlural(name string) string {
 	return inflection.Plural(name)
+}
+
+func ToLowerPlural(name string) string {
+	return inflection.Plural(strcase.ToLowerCamel(name))
 }

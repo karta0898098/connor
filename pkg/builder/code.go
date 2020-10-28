@@ -22,8 +22,8 @@ type CodeBuilder struct {
 
 // Build create source code
 func (c *CodeBuilder) Build() {
-
 	var buf bytes.Buffer
+
 	t, err := template.New(c.File).Funcs(appTemplate.Map).Parse(c.Template)
 	if err != nil {
 		fmt.Printf("can't write:%v reason:%v\n", c.File, err)

@@ -8,7 +8,6 @@ import (
 
 //BuildDockerfile build dockerfile
 func (app *AppBuilder) BuildDockerfile() *AppBuilder {
-
 	builder := &CodeBuilder{
 		Template:    template.Dockerfile,
 		ProjectName: app.projectName,

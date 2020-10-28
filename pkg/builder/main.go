@@ -4,7 +4,6 @@ import "github.com/karta0898098/connor/pkg/template"
 
 // BuildMain build main.go
 func (app *AppBuilder) BuildMain() *AppBuilder {
-
 	builder := &CodeBuilder{
 		Template:    template.Main,
 		ProjectName: app.projectName,
@@ -21,7 +20,6 @@ func (app *AppBuilder) BuildMain() *AppBuilder {
 
 // BuildServer build server.go
 func (app *AppBuilder) BuildServer(http string) *AppBuilder {
-
 	engine := ""
 	if http == "gin" {
 		engine = "RunGin"

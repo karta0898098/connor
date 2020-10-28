@@ -8,7 +8,6 @@ import (
 
 // BuildServiceModule build service module
 func (app *AppBuilder) BuildServiceModule() *AppBuilder {
-
 	builder := &CodeBuilder{
 		Template:    template.ServiceModule,
 		ProjectName: app.projectName,
@@ -25,7 +24,6 @@ func (app *AppBuilder) BuildServiceModule() *AppBuilder {
 
 // BuildService build service
 func (app *AppBuilder) BuildService(service string) *AppBuilder {
-
 	builder := &CodeBuilder{
 		Template: template.Service,
 		Path:     "pkg/service",
@@ -42,7 +40,6 @@ func (app *AppBuilder) BuildService(service string) *AppBuilder {
 
 // AddServiceModule add service to module
 func (app *AppBuilder) AddServiceModule(service string) *AppBuilder {
-
 	if _, err := os.Stat("./pkg/service/" + strcase.ToSnake(service) + ".go"); err == nil {
 		return app
 	}

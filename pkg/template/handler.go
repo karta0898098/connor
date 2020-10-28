@@ -39,7 +39,6 @@ func NewHandler(h Params) *Handler {
 
 // AddHandlerModule add controller to handler
 func AddHandlerModule(controller string) string {
-
 	code, _ := ioutil.ReadFile("./pkg/handler/handler.go")
 	f, err := decorator.Parse(code)
 	if err != nil {

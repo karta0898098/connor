@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"github.com/iancoleman/strcase"
 	"github.com/karta0898098/connor/pkg/template"
 	"os"
 	"strings"
@@ -25,7 +26,6 @@ func (app *AppBuilder) BuildControllerModule() *AppBuilder {
 
 // BuildController build controller crud method
 func (app *AppBuilder) BuildController(name, httpEngine string) *AppBuilder {
-
 	tmpl := ``
 
 	if httpEngine == "gin" {
@@ -37,7 +37,7 @@ func (app *AppBuilder) BuildController(name, httpEngine string) *AppBuilder {
 	builder := &CodeBuilder{
 		Template: tmpl,
 		Path:     "pkg/handler/controller",
-		File:     strings.ToLower(name) + ".go",
+		File:     strcase.ToSnake(name) + ".go",
 		Data: H{
 			"Name": name,
 		},

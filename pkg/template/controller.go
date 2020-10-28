@@ -116,7 +116,6 @@ func (controller *{{.Name}}Controller) Delete(c echo.Context) error{
 
 // AddControllerInModule add controller module
 func AddControllerInModule(controller string) string {
-
 	code, _ := ioutil.ReadFile("./pkg/handler/controller/module.go")
 
 	f, err := decorator.Parse(code)

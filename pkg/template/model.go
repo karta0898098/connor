@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-const modelWhereUpdate = `
+const modelQueryCondition = `
 // TableName {{.Name}} in database table name
 func ({{ToLowerCamel .Name}} *{{.Name}}) TableName() string {
 	return "{{ToLowerCamel .Plural}}"
@@ -20,23 +20,35 @@ type Query{{.Name}} struct {
 	{{.Name}} {{.Name}}
 	Base condition.Where
 	Sorting condition.Sorting
+	Pagination condition.Pagination
+
+	ForUpdate bool
 }
 
-// Where for repository where condition
-func (option *Query{{.Name}}) Where(db *gorm.DB) *gorm.DB {
+// Scope for repository scope condition
+func (option Query{{.Name}}) Scope(db *gorm.DB) *gorm.DB {
 	db = db.Where(option.{{.Name}})
 	db = db.Scopes(option.Base.Where)
-	db = db.Scopes(option.Sorting.Sort)
+
 	return db
+}
+
+// Clause ...
+func (option Query{{.Name}}) Clause() (exps []clause.Expression) {
+	if option.ForUpdate {
+		exps = append(exps, clause.Locking{
+			Strength: "UPDATE",
+		})
+	}
+	return exps
 }
 `
 
-// AddModelWhereAndUpdate add where and update to model
-func AddModelWhereAndUpdate(code []byte) string {
-
+// AddModelQueryCondition add where and update to model
+func AddModelQueryCondition(code []byte) string {
 	f, err := decorator.Parse(code)
 	if err != nil {
-		fmt.Println("can't add where condition in model reason: ", err)
+		fmt.Println("can't add query condition in model reason: ", err)
 		return ""
 	}
 
@@ -132,7 +144,7 @@ func AddModelWhereAndUpdate(code []byte) string {
 		return ""
 	}
 
-	buf.Write([]byte(modelWhereUpdate))
+	buf.Write([]byte(modelQueryCondition))
 
 	return buf.String()
 }

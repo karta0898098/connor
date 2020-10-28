@@ -150,8 +150,8 @@ import (
 
 // {{.Name}}Repository ...
 type {{.Name}}Repository interface {
-	Get{{.Name}}(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) (model.{{.Name}}, error)
-	List{{ToPlural .Name}}(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) ([]model.{{.Name}} ,error)
+	Get{{.Name}}(ctx context.Context, condition model.Query{{.Name}}) (model.{{.Name}}, error)
+	List{{ToPlural .Name}}(ctx context.Context, condition model.Query{{.Name}}) ([]model.{{.Name}} ,error)
 	Create{{.Name}}(ctx context.Context, data model.{{.Name}}) (model.{{.Name}}, error)
 	Update{{.Name}}(ctx context.Context, condition model.Query{{.Name}}, data interface{}) error
 	Delete{{.Name}}(ctx context.Context, condition model.Query{{.Name}}) error
@@ -160,10 +160,18 @@ type {{.Name}}Repository interface {
 
 
 // Get{{.Name}} rdbms get {{ToLowerCamel .Name}}
-func (repo *repository) Get{{.Name}}(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) (model.{{.Name}}, error) {
+func (repo *repository) Get{{.Name}}(ctx context.Context, condition model.Query{{.Name}}) (model.{{.Name}}, error) {
 	var {{ToLowerCamel .Name}} model.{{.Name}}
 
-	err := repo.forUpdate(forUpdate).WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).First(&{{ToLowerCamel .Name}}).Error
+	err := repo.
+		getReadDB().
+		WithContext(ctx).
+		Model(&model.{{.Name}}{}).
+		Scopes(
+			condition.Scope,
+		).
+		First(&{{ToLowerCamel .Name}}).Error
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return model.{{.Name}}{}, errors.Wrap(exception.ErrResourceNotFound, "get {{ToLowerCamel .Name}} from database error")
@@ -178,7 +186,13 @@ func (repo *repository) Get{{.Name}}(ctx context.Context, condition model.Query{
 func (repo *repository) List{{ToPlural .Name}}(ctx context.Context, condition model.Query{{.Name}}, forUpdate bool) ([]model.{{.Name}} , error) {
 	var {{ToLowerCamel .Plural}} []model.{{.Name}}
 
-	err := repo.forUpdate(forUpdate).WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).Find(&{{ToLowerCamel .Plural}}).Error
+	err := repo.
+		getReadDB().
+		WithContext(ctx).
+		Model(&model.{{.Name}}{}).
+		Scopes(condition.Scope).
+		Find(&{{ToLowerCamel .Plural}}).Error
+
 	if err != nil {
 		{{ToLowerCamel .Plural}} = make([]model.{{.Name}}, 0)
 		return {{ToLowerCamel .Plural}}, err
@@ -188,7 +202,11 @@ func (repo *repository) List{{ToPlural .Name}}(ctx context.Context, condition mo
 
 // Create{{.Name}} rdbms create {{ToLowerCamel .Name}}
 func (repo *repository) Create{{.Name}}(ctx context.Context, data model.{{.Name}}) (model.{{.Name}}, error) {
-	err := repo.getWriteDB().WithContext(ctx).Model(&model.{{.Name}}{}).Create(&data).Error
+	err := repo.
+		getWriteDB().
+		WithContext(ctx).
+		Create(&data).Error
+
 	if err != nil {
 		return model.{{.Name}}{}, err
 	}
@@ -202,7 +220,13 @@ func (repo *repository) Update{{.Name}}(ctx context.Context, condition model.Que
 		return errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
-	err := repo.getWriteDB().WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).Updates(data).Error
+	err := repo.
+		getWriteDB().
+		WithContext(ctx).
+		Model(&model.{{.Name}}{}).
+		Scopes(condition.Scope).
+		Updates(data).Error
+
 	return err
 }
 
@@ -212,7 +236,12 @@ func (repo *repository) Delete{{.Name}}(ctx context.Context, condition model.Que
 		return errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
 	}
 
-	err := repo.getWriteDB().WithContext(ctx).Scopes(condition.Where).Delete(model.{{.Name}}{}).Error
+	err := repo.
+		getWriteDB().
+		WithContext(ctx).
+		Scopes(condition.Scope).
+		Delete(model.{{.Name}}{}).Error
+
 	if err != nil {
 		return err
 	}
@@ -224,11 +253,13 @@ func (repo *repository) Delete{{.Name}}(ctx context.Context, condition model.Que
 func (repo *repository) Count{{.Name}}(ctx context.Context, condition model.Query{{.Name}}) (int64,error) {
 	var count int64
 
-	if reflect.DeepEqual(condition, model.Query{{.Name}}{}) {
-		return count,errors.Wrap(exception.ErrInvalidInput, "repository: {{ToLowerCamel .Name}} query condition is nil")
-	}
+	err := repo.
+		getReadDB().
+		WithContext(ctx).
+		Model(&model.{{.Name}}{}).
+		Scopes(condition.Scope).
+		Count(&count).Error
 
-	err := repo.getReadDB().WithContext(ctx).Model(&model.{{.Name}}{}).Scopes(condition.Where).Count(&count).Error
 	if err != nil{
 		return count,err
 	}
